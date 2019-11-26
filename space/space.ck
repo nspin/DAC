@@ -109,16 +109,6 @@ fun void drum2() {
     }
 };
 
-load("redacted3.aif") @=> SndBuf oh => sdac;
-fun void hat1() {
-    Universe u;
-    u.adv(intro);
-    u.goto(3::measure + 3::beat);
-    0 => oh.pos;
-    u.adv(2::measure);
-    0 => oh.pos;
-};
-
 // BLIT
 
 Blit bl => JCRev r => Pan2 blPan => Gain blGain => Gain blMute => sdac;

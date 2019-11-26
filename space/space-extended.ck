@@ -109,16 +109,6 @@ fun void drum2() {
     }
 };
 
-load("redacted3.aif") @=> SndBuf oh => sdac;
-fun void hat1() {
-    Universe u;
-    u.adv(intro);
-    u.goto(3::measure + 3::beat);
-    0 => oh.pos;
-    u.adv(2::measure);
-    0 => oh.pos;
-};
-
 // BLIT
 
 Blit bl => JCRev r => Pan2 blPan => Gain blGain => Gain blMute => sdac;
@@ -204,17 +194,11 @@ SndBuf pop;
 pop.samples() => pop.pos;
 
 fun void pops() {
-
     Universe u;
-    for (0 => int i; i < 39 * 4; i++) {
+    while (true) {
         0 => pop.pos;
         u.adv(1::beat);
     }
-    for (0 => int i; i < 4 * 16 * 4; i++) {
-        0 => pop.pos;
-        u.adv(.25::beat);
-    }
-
 }
 
 fun void ctrl1() {
@@ -238,7 +222,7 @@ fun void ctrl1() {
         v + .05 => v;
         0.2 + Math.sin(v)*.1 => g.gain;
         0.2 + Math.sin(v)*.1 => g.gain;
-        1::beat => now;
+        u.adv(1::beat);
     }
 
 }
@@ -276,4 +260,4 @@ spork ~ ctrl2();
 
 .6 => sdac.gain;
 Universe u;
-u.adv(intro + drums + cut + 8::measure + 1::second);
+u.adv(intro + drums + cut + 8::measure);

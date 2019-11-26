@@ -125,10 +125,10 @@ fun void blit() {
     [ 0, 0, 2, 2, 0, 0, 0, 9
     , 0, 0, 0, 0, 7, 7, 0, 9
     , 0, 0, 2, 2, 9, 9, 0, 9
-    , 9, 0, 0, 0, 4, 4, 2, 9
-    , 9, 0, 0, 0, 2, 2, 4, 9
-    , 9, 0, 0, 0, 4, 4, 2, 9
-    , 0, 0, 0, 0, 9, 11, 9, 21
+    , 9, 0, 7, 0, 4, 4, 2, 9
+    , 9, 0, 7, 0, 2, 2, 4, 9
+    , 9, 0, 7, 0, 4, 4, 2, 4
+    , 9, 0, 7, 0, 9, 11, 9, 21
     ] @=> int first[];
 
     [1, 2, 3, 4, 5, 6, 7] @=> int harms[];
@@ -194,17 +194,11 @@ SndBuf pop;
 pop.samples() => pop.pos;
 
 fun void pops() {
-
     Universe u;
-    for (0 => int i; i < 39 * 4; i++) {
+    while (true) {
         0 => pop.pos;
         u.adv(1::beat);
     }
-    for (0 => int i; i < 4 * 16 * 4; i++) {
-        0 => pop.pos;
-        u.adv(.25::beat);
-    }
-
 }
 
 fun void ctrl1() {
@@ -228,7 +222,7 @@ fun void ctrl1() {
         v + .05 => v;
         0.2 + Math.sin(v)*.1 => g.gain;
         0.2 + Math.sin(v)*.1 => g.gain;
-        1::beat => now;
+        u.adv(1::beat);
     }
 
 }

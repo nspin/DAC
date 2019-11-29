@@ -63,6 +63,10 @@ class XNote {
     int octave;
     int note;
     int harmonics;
+
+    fun void show() {
+        <<< "    " + octave + "," + note + "," + harmonics >>>;
+    }
 }
 
 fun XNote mk_xnote(int octave, int note, int harmonics) {
@@ -73,25 +77,29 @@ fun XNote mk_xnote(int octave, int note, int harmonics) {
     return xnote;
 }
 
+368 => int nmelody;
+32 => int noutro;
+XNote @ melody[nmelody];
+XNote @ outro[noutro];
+
 class XScore {
 
     0 => int ix;
 
     fun XNote next() {
         <<< "ix: " + ix >>>;
-        int harmonics;
+        XNote xnote;
         if (ix < 368) {
-            Math.random2(1, 5) => harmonics;
+            melody[ix] @=> xnote;
         } else {
-            Math.random2(4, 9) => harmonics;
+            outro[ix - nmelody] @=> xnote;
         }
-        mk_xnote(
-            Math.random2(0, 3),
-            Math.random2(0, 5),
-            harmonics
-            ) @=> XNote xnote;
         1 +=> ix;
         return xnote;
+    }
+
+    fun void reset() {
+        0 => ix;
     }
 }
 
@@ -132,11 +140,13 @@ fun void play(Universe u, TriOsc s, float points[], int notes[], float last) {
 24 => int cutlen;
 cutlen::measure => dur cut;
 
+load("redacted1.aif") @=> SndBuf dsp => sdac;
+load("redacted2.wav") @=> SndBuf dk => sdac;
+
 class X {
 
     // Score
 
-    load("redacted1.aif") @=> SndBuf dsp => sdac;
     fun void drum1() {
         Universe u;
         u.adv(intro + drums);
@@ -146,7 +156,6 @@ class X {
         }
     };
 
-    load("redacted2.wav") @=> SndBuf dk => sdac;
     fun void drum2() {
         Universe u;
         u.adv(intro + drums);
@@ -322,6 +331,11 @@ fun void do_x() {
     X x;
 }
 
+fun void do_x_e(Event e) {
+    spork ~ do_x();
+    e => now;
+}
+
 fun void do_x_shred(dur d) {
     spork ~ do_x();
     d => now;
@@ -341,32 +355,90 @@ fun int eq(float a, float b) {
     }
 }
 
-now => zero;
-
 sdac => blackhole;
 
-spork ~ do_x();
-SndBuf orig => dac;
-me.dir() + "orig.wav" => orig.read;
-0 => orig.pos;
-
-0 => int nframes;
-while (true) {
-    orig.last() => float a;
-    sdac.last() => float b;
-    eq(a, b) => int sme;
-    /* <<< "nframes = " + nframes + ", a = " + a + ", b = " + b + ", same = " + sme >>>; */
-    if (sme != 1) {
-        break;
-    }
-    1::samp => now;
-    /* 1::second => now; */
-    1 +=> nframes;
-    /* if (nframes > 20000) { */
-    /*     break; */
-    /* } */
+for (0 => int i; i < nmelody; i++) {
+    mk_xnote(0, 0, 1) @=> melody[i];
 }
-<<< "nframes = " + nframes >>>;
+
+for (0 => int i; i < noutro; i++) {
+    mk_xnote(0, 0, 4) @=> outro[i];
+}
+
+0 => int i_samps;
+
+SndBuf orig => blackhole;
+me.dir() + "orig.wav" => orig.read;
+
+for (0 => int i_melody; i_melody < nmelody; i_melody++) {
+    <<< "i_samps = " + i_samps >>>;
+    <<< "i_melody = " + i_melody >>>;
+    melody[i_melody] @=> XNote best;
+    -1 => int best_samps;
+    for (0 => int octave; octave <= 3; octave++) {
+        <<< "octave = " + octave >>>;
+        for (0 => int note; note <= 5; note++) {
+            <<< "note = " + note >>>;
+            for (1 => int harmonics; harmonics <= 5; harmonics++) {
+                <<< "harmonics = " + harmonics >>>;
+                mk_xnote(octave, note, harmonics) @=> melody[i_melody];
+                i_samps => int i_samps_local;
+                xscore.reset();
+
+                0 => orig.pos;
+                dsp.samples() => dsp.pos;
+                dk.samples() => dk.pos;
+                now => zero;
+                Event e;
+                spork ~ do_x_e(e);
+
+                /* <<< "x i_samps_local = " + i_samps_local >>>; */
+                i_samps_local::samp => now;
+                /* 0::samp => now; */
+                while (true) {
+                    1::samp => now;
+                    orig.last() => float a;
+                    sdac.last() => float b;
+                    eq(a, b) => int sme;
+                    /* <<< "xx orig.last() = " + a + "sdac.last() = " + b >>>; */
+                    if (sme != 1) {
+                        break;
+                    }
+                    1 +=> i_samps_local;
+                    /* 1::second => now; */
+                    /* if (nframes > 20000) { */
+                    /*     break; */
+                    /* } */
+                }
+                /* <<< "break" >>>; */
+                /* <<< "i_samps_local = " + i_samps_local >>>; */
+
+                if (i_samps_local > best_samps) {
+                    i_samps_local => best_samps;
+                    melody[i_melody] @=> best;
+                    <<< "new best: best_samps = " + best_samps >>>;
+                    best.show();
+                }
+                e.signal();
+
+            }
+        }
+    }
+    best @=> melody[i_melody];
+    best_samps => i_samps;
+    <<< "melody[" + i_melody + "] =" >>>;
+    best.show();
+}
+
+for (0 => int i_outro; i_outro < noutro; i_outro++) {
+    for (0 => int octave; octave <= 3; octave++) {
+        for (0 => int note; note <= 5; note++) {
+            for (4 => int harmonics; harmonics <= 9; harmonics++) {
+            }
+        }
+    }
+}
+
 
 /* /1* do_x_for(10); *1/ */
 /* 10::second => do_x_for; */

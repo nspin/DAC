@@ -94,7 +94,10 @@ class XScore {
         } else {
             outro[ix - nmelody] @=> xnote;
         }
+        mk_xnote(0,2,4) @=> xnote;
         1 +=> ix;
+        <<< "XNOTE" >>>;
+        xnote.show();
         return xnote;
     }
 
@@ -374,15 +377,18 @@ for (0 => int i_melody; i_melody < nmelody; i_melody++) {
     <<< "i_samps = " + i_samps >>>;
     <<< "i_melody = " + i_melody >>>;
     melody[i_melody] @=> XNote best;
-    -1 => int best_samps;
-    for (0 => int octave; octave <= 3; octave++) {
+    i_samps => int best_samps;
+    for (0 => int octave; octave <= 3; 1 +=> octave) {
         <<< "octave = " + octave >>>;
-        for (0 => int note; note <= 5; note++) {
+        for (0 => int note; note <= 5; 1 +=> note) {
             <<< "note = " + note >>>;
-            for (1 => int harmonics; harmonics <= 5; harmonics++) {
+            for (1 => int harmonics; harmonics <= 5; 1 +=> harmonics) {
+                if (octave == 0 && note == 2 && harmonics == 4) {
+                    <<< "FOO" >>>;
+                }
                 <<< "harmonics = " + harmonics >>>;
                 mk_xnote(octave, note, harmonics) @=> melody[i_melody];
-                i_samps => int i_samps_local;
+                best_samps => int i_samps_local;
                 xscore.reset();
 
                 0 => orig.pos;
@@ -410,8 +416,8 @@ for (0 => int i_melody; i_melody < nmelody; i_melody++) {
                     /*     break; */
                     /* } */
                 }
-                /* <<< "break" >>>; */
-                /* <<< "i_samps_local = " + i_samps_local >>>; */
+                <<< "break" >>>;
+                <<< "i_samps_local = " + i_samps_local >>>;
 
                 if (i_samps_local > best_samps) {
                     i_samps_local => best_samps;

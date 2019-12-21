@@ -8,6 +8,27 @@
  * coefficients of the blit filter) come from examples in the ChucK source tree.
  */
 
+public class XNote {
+    int octave;
+    int note;
+    int harmonics;
+
+    fun static XNote mk_xnote(int octave, int note, int harmonics) {
+        XNote xnote;
+        octave => xnote.octave;
+        note => xnote.note;
+        harmonics => xnote.harmonics;
+        return xnote;
+    }
+}
+
+368 => int n_melody;
+32 => int n_outro;
+XNote @ melody[n_melody];
+XNote @ outro[n_outro];
+
+@XXX@
+
 /* Gain sdac => dac; */
 Gain sdac;
 
@@ -59,37 +80,19 @@ class Universe {
 
 }
 
-class XNote {
-    int octave;
-    int note;
-    int harmonics;
-}
-
-fun XNote mk_xnote(int octave, int note, int harmonics) {
-    XNote xnote;
-    octave => xnote.octave;
-    note => xnote.note;
-    harmonics => xnote.harmonics;
-    return xnote;
-}
-
 class XScore {
 
     0 => int ix;
 
     fun XNote next() {
         <<< "ix: " + ix >>>;
-        int harmonics;
+        XNote xnote;
         if (ix < 368) {
-            Math.random2(1, 5) => harmonics;
+            melody[ix] @=> xnote;
+            <<< "xnote: " + xnote >>>;
         } else {
-            Math.random2(4, 9) => harmonics;
+            outro[ix - n_melody] @=> xnote;
         }
-        mk_xnote(
-            Math.random2(0, 3),
-            Math.random2(0, 5),
-            harmonics
-            ) @=> XNote xnote;
         1 +=> ix;
         return xnote;
     }
